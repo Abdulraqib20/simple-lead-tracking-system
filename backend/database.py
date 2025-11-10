@@ -15,8 +15,16 @@ from pathlib import Path
 from models import Lead, LeadCreate, LeadUpdate, Activity, ActivityType
 
 
+# Check if running on Vercel
+IS_VERCEL = os.environ.get('VERCEL_ENV') is not None
+
 # Path to the JSON data file
-DATA_DIR = Path(__file__).parent.parent / "data"
+if IS_VERCEL:
+    # On Vercel, use /tmp directory which is writable
+    DATA_DIR = Path("/tmp")
+else:
+    DATA_DIR = Path(__file__).parent.parent / "data"
+
 LEADS_FILE = DATA_DIR / "leads.json"
 
 
@@ -29,8 +37,34 @@ def ensure_data_file_exists() -> None:
     """
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     if not LEADS_FILE.exists():
+        # Initialize with sample data
+        initial_data = {
+            "leads": [
+                {
+                    "company_name": "Interswitch",
+                    "contact_name": "Edikan Etuduko",
+                    "title": "Talent Acquisition Specialist",
+                    "email": "edikan.etukudo@interswitchgroup.com",
+                    "linkedin_url": "",
+                    "status": "contacted",
+                    "notes": "Met at tech conference. Very interested in our product.",
+                    "tags": ["Hot Lead", "Conference"],
+                    "id": "c2501d2e-798f-4d00-b9ee-1e3f17685bdc",
+                    "date_added": "2025-11-10T09:24:30.590825",
+                    "last_contacted": "2025-11-10T14:30:00.000000",
+                    "activity_history": [
+                        {
+                            "timestamp": "2025-11-10T09:24:30.590825",
+                            "type": "created",
+                            "description": "Lead created for Edikan Etuduko",
+                            "details": None
+                        }
+                    ]
+                }
+            ]
+        }
         with open(LEADS_FILE, 'w') as f:
-            json.dump({"leads": []}, f, indent=2)
+            json.dump(initial_data, f, indent=2)
 
 
 def load_leads() -> List[Lead]:
@@ -60,7 +94,7 @@ def load_leads() -> List[Lead]:
             lead_data['last_contacted'] = datetime.fromisoformat(
                 lead_data['last_contacted']
             )
-        
+
         # Parse activity history
         if 'activity_history' in lead_data:
             activities = []
@@ -71,7 +105,7 @@ def load_leads() -> List[Lead]:
                     )
                 activities.append(Activity(**activity_data))
             lead_data['activity_history'] = activities
-        
+
         leads.append(Lead(**lead_data))
 
     return leads
@@ -250,10 +284,10 @@ def update_lead(lead_id: str, lead_data: LeadUpdate) -> Optional[Lead]:
     for i, lead in enumerate(leads):
         if lead.id == lead_id:
             now = datetime.now()
-            
+
             # Track what changed
             activities = list(lead.activity_history)
-            
+
             # Check for status change
             if lead_data.status != lead.status:
                 activities.append(Activity(
@@ -262,7 +296,7 @@ def update_lead(lead_id: str, lead_data: LeadUpdate) -> Optional[Lead]:
                     description=f"Status changed from {lead.status.value} to {lead_data.status.value}",
                     details=None
                 ))
-                
+
                 # Update last_contacted if status changed to contacted or responded
                 if lead_data.status.value in ['contacted', 'responded']:
                     last_contacted = now
@@ -270,7 +304,7 @@ def update_lead(lead_id: str, lead_data: LeadUpdate) -> Optional[Lead]:
                     last_contacted = lead.last_contacted
             else:
                 last_contacted = lead.last_contacted
-            
+
             # Check for notes change
             if lead_data.notes and lead_data.notes != lead.notes:
                 activities.append(Activity(
@@ -279,14 +313,14 @@ def update_lead(lead_id: str, lead_data: LeadUpdate) -> Optional[Lead]:
                     description="Note updated",
                     details=lead_data.notes[:100]
                 ))
-            
+
             # Check for tag changes
             old_tags = set(lead.tags)
             new_tags = set(lead_data.tags)
-            
+
             added_tags = new_tags - old_tags
             removed_tags = old_tags - new_tags
-            
+
             for tag in added_tags:
                 activities.append(Activity(
                     timestamp=now,
@@ -294,7 +328,7 @@ def update_lead(lead_id: str, lead_data: LeadUpdate) -> Optional[Lead]:
                     description=f"Tag added: {tag}",
                     details=None
                 ))
-            
+
             for tag in removed_tags:
                 activities.append(Activity(
                     timestamp=now,
@@ -302,7 +336,7 @@ def update_lead(lead_id: str, lead_data: LeadUpdate) -> Optional[Lead]:
                     description=f"Tag removed: {tag}",
                     details=None
                 ))
-            
+
             # General update activity if something changed
             if not (activities[-1:] and activities[-1].type in [ActivityType.STATUS_CHANGED, ActivityType.NOTE_ADDED, ActivityType.TAG_ADDED, ActivityType.TAG_REMOVED]):
                 activities.append(Activity(
@@ -311,7 +345,7 @@ def update_lead(lead_id: str, lead_data: LeadUpdate) -> Optional[Lead]:
                     description="Lead information updated",
                     details=None
                 ))
-            
+
             # Preserve original ID and date_added
             updated_lead = Lead(
                 id=lead.id,

@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
 from pathlib import Path
+import os
 
 from models import Lead, LeadCreate, LeadUpdate, LeadResponse
 import database as db
@@ -35,7 +36,9 @@ app.add_middleware(
 
 # Serve static files (frontend)
 frontend_path = Path(__file__).parent.parent / "frontend"
-if frontend_path.exists():
+
+# Only mount static files if not on Vercel
+if frontend_path.exists() and not os.environ.get('VERCEL_ENV'):
     app.mount("/static", StaticFiles(directory=str(frontend_path)), name="static")
 
 
@@ -235,20 +238,23 @@ async def get_all_tags():
     try:
         leads = db.get_all_leads()
         tag_counts = {}
-        
+
         for lead in leads:
             for tag in lead.tags:
                 tag_counts[tag] = tag_counts.get(tag, 0) + 1
-        
+
         tags = [
             {"name": tag, "count": count}
             for tag, count in sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)
         ]
-        
+
         return {"tags": tags}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# Vercel handler
+handler = app
 
 if __name__ == "__main__":
     import uvicorn

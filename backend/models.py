@@ -15,7 +15,7 @@ import re
 class ActivityType(str, Enum):
     """
     Enumeration of activity types for lead history.
-    
+
     Attributes:
         CREATED: Lead was created
         UPDATED: Lead information was updated
@@ -35,7 +35,7 @@ class ActivityType(str, Enum):
 class Activity(BaseModel):
     """
     Activity log entry for lead history.
-    
+
     Attributes:
         timestamp: When the activity occurred
         type: Type of activity
@@ -46,7 +46,7 @@ class Activity(BaseModel):
     type: ActivityType
     description: str
     details: Optional[str] = None
-    
+
     class Config:
         """Pydantic configuration."""
         json_encoders = {

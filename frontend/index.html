@@ -400,18 +400,21 @@
     </div>
 
     <!-- Timeline Modal -->
-    <div id="timelineModal" class="hidden fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+    <div id="timelineModal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
         <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-2xl slide-in">
             <div class="p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Activity Timeline</h3>
-                    <button onclick="closeTimeline()" class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                    <button onclick="closeTimeline()"
+                        class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
                 </div>
-                
+
                 <div id="timelineContent" class="space-y-4 max-h-96 overflow-y-auto">
                     <!-- Timeline events will be rendered here -->
                 </div>
@@ -487,7 +490,7 @@
                     </button>
                 </span>
             `).join('');
-            
+
             // Update hidden field
             document.getElementById('tagsHidden').value = JSON.stringify(currentTags);
         }
@@ -495,7 +498,7 @@
         function addTag() {
             const input = document.getElementById('tagInput');
             const tag = input.value.trim();
-            
+
             if (tag && !currentTags.includes(tag)) {
                 currentTags.push(tag);
                 renderTags();
@@ -1019,7 +1022,7 @@
         function showTimeline(lead) {
             const modal = document.getElementById('timelineModal');
             const content = document.getElementById('timelineContent');
-            
+
             if (!lead.activity_history || lead.activity_history.length === 0) {
                 content.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-8">No activity history available</p>';
             } else {
@@ -1032,10 +1035,10 @@
                         tag_added: '<svg class="w-5 h-5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path></svg>',
                         tag_removed: '<svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path></svg>'
                     };
-                    
+
                     const icon = icons[activity.type] || icons.updated;
                     const isLast = index === lead.activity_history.length - 1;
-                    
+
                     return `
                         <div class="flex gap-4">
                             <div class="flex flex-col items-center">
@@ -1053,7 +1056,7 @@
                     `;
                 }).join('');
             }
-            
+
             modal.classList.remove('hidden');
         }
 
