@@ -12,20 +12,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
 from pathlib import Path
 import os
-import sys
 
-# Add backend directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent))
-
-try:
-    from backend.models import Lead, LeadCreate, LeadUpdate, LeadResponse
-    import backend.database as db
-    import backend.utils as utils
-except ImportError:
-    # Fallback for local development
-    from models import Lead, LeadCreate, LeadUpdate, LeadResponse
-    import database as db
-    import utils
+from models import Lead, LeadCreate, LeadUpdate, LeadResponse
+import database as db
+import utils
 
 
 app = FastAPI(
@@ -313,9 +303,6 @@ async def general_exception_handler(request: Request, exc: Exception):
         status_code=500
     )
 
-
-# Vercel handler
-handler = app
 
 if __name__ == "__main__":
     import uvicorn

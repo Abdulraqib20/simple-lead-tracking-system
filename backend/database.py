@@ -11,15 +11,8 @@ from typing import List, Optional, Dict
 from datetime import datetime
 import uuid
 from pathlib import Path
-import sys
 
-# Add backend directory to path
-sys.path.insert(0, str(Path(__file__).parent))
-
-try:
-    from backend.models import Lead, LeadCreate, LeadUpdate, Activity, ActivityType
-except ImportError:
-    from models import Lead, LeadCreate, LeadUpdate, Activity, ActivityType
+from models import Lead, LeadCreate, LeadUpdate, Activity, ActivityType
 
 
 # Check if running on Vercel
