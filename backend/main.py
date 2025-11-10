@@ -5,17 +5,27 @@ This module provides the REST API endpoints for managing leads,
 including CRUD operations, search, export, and statistics.
 """
 
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import Response, FileResponse
+from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.responses import Response, FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
 from pathlib import Path
 import os
+import sys
 
-from models import Lead, LeadCreate, LeadUpdate, LeadResponse
-import database as db
-import utils
+# Add backend directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent))
+
+try:
+    from backend.models import Lead, LeadCreate, LeadUpdate, LeadResponse
+    import backend.database as db
+    import backend.utils as utils
+except ImportError:
+    # Fallback for local development
+    from models import Lead, LeadCreate, LeadUpdate, LeadResponse
+    import database as db
+    import utils
 
 
 app = FastAPI(
@@ -296,12 +306,11 @@ async def get_all_tags():
 
 # Exception handler for unhandled errors
 @app.exception_handler(Exception)
-async def general_exception_handler(request, exc):
+async def general_exception_handler(request: Request, exc: Exception):
     """Handle uncaught exceptions gracefully."""
-    return Response(
-        content=f'{{"error": "Internal server error: {str(exc)}}}',
-        status_code=500,
-        media_type="application/json"
+    return JSONResponse(
+        content={"error": f"Internal server error: {str(exc)}"},
+        status_code=500
     )
 
 
