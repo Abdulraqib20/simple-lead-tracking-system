@@ -34,6 +34,15 @@ app.add_middleware(
 )
 
 
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database on startup."""
+    try:
+        db.ensure_data_file_exists()
+    except Exception as e:
+        print(f"Warning: Could not initialize database: {e}")
+
+
 # Serve static files (frontend)
 frontend_path = Path(__file__).parent.parent / "frontend"
 
@@ -48,12 +57,16 @@ async def read_root():
     Serve the frontend HTML page.
 
     Returns:
-        FileResponse: The main HTML page
+        FileResponse: The main HTML page or API message
     """
-    index_path = frontend_path / "index.html"
-    if index_path.exists():
-        return FileResponse(str(index_path))
-    return {"message": "Lead Tracking System API"}
+    try:
+        index_path = frontend_path / "index.html"
+        if index_path.exists():
+            return FileResponse(str(index_path), media_type="text/html")
+    except Exception:
+        pass
+    
+    return {"message": "Lead Tracking System API", "status": "running"}
 
 
 @app.get("/favicon.ico")
@@ -66,6 +79,22 @@ async def favicon():
         Response: 204 No Content response
     """
     return Response(status_code=204)
+
+
+@app.get("/api/health")
+async def health_check():
+    """
+    Health check endpoint for monitoring.
+
+    Returns:
+        dict: Status of the application
+    """
+    try:
+        # Try to ensure database is initialized
+        db.ensure_data_file_exists()
+        return {"status": "healthy", "service": "lead-tracking-system"}
+    except Exception as e:
+        return {"status": "unhealthy", "error": str(e)}
 
 
 @app.get("/api/leads", response_model=List[Lead])
@@ -263,6 +292,17 @@ async def get_all_tags():
         return {"tags": tags}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# Exception handler for unhandled errors
+@app.exception_handler(Exception)
+async def general_exception_handler(request, exc):
+    """Handle uncaught exceptions gracefully."""
+    return Response(
+        content=f'{{"error": "Internal server error: {str(exc)}}}',
+        status_code=500,
+        media_type="application/json"
+    )
 
 
 # Vercel handler
