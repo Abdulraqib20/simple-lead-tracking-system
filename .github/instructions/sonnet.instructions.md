@@ -1,3 +1,0 @@
-- never create markdown (`.md`) files after you are done. NEVER!
-- never use emojis in your replies
-- i know i'm absolutely right. no need to mention it
