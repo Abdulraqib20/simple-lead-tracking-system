@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
 from pathlib import Path
+from contextlib import asynccontextmanager
 import os
 
 from models import Lead, LeadCreate, LeadUpdate, LeadResponse
@@ -18,10 +19,28 @@ import database as db
 import utils
 
 
+# Initialize database before startup
+db.ensure_data_file_exists()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan context manager for startup and shutdown events."""
+    # Startup
+    try:
+        db.ensure_data_file_exists()
+    except Exception as e:
+        print(f"Warning: Could not initialize database: {e}")
+    yield
+    # Shutdown
+    pass
+
+
 app = FastAPI(
     title="Lead Tracking System",
     description="Simple lead management system with JSON storage",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # Add CORS middleware for local development
@@ -32,15 +51,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Initialize database on startup."""
-    try:
-        db.ensure_data_file_exists()
-    except Exception as e:
-        print(f"Warning: Could not initialize database: {e}")
 
 
 # Serve static files (frontend)
