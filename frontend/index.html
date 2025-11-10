@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lead Tracking System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        // Configure Tailwind dark mode
+        tailwind.config = {
+            darkMode: 'class'
+        }
+
+        // Theme initialization before page loads
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.classList.remove('light');
+        } else {
+            document.documentElement.classList.add('light');
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .copy-feedback {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .company-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .company-card:hover {
+            transform: translateY(-8px);
+        }
+
+        .dark .company-card:hover {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        .light .company-card:hover {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .lead-card {
+            transition: all 0.2s ease;
+        }
+
+        .lead-card:hover {
+            transform: translateX(4px);
+        }
+
+        .dark .lead-card:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        .light .lead-card:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Theme transition */
+        * {
+            transition-property: background-color, border-color, color, fill, stroke;
+            transition-duration: 200ms;
+            transition-timing-function: ease-in-out;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen text-gray-900 dark:text-gray-100">
+
+    <!-- Header -->
+    <header class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-40 border-b border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <svg class="w-10 h-10 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
+                        </path>
+                    </svg>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                            Lead Tracking
+                        </h1>
+                        <p id="breadcrumb" class="text-sm text-gray-500 dark:text-gray-400"></p>
+                    </div>
+                </div>
+                <div class="flex gap-3 items-center">
+                    <!-- Theme Toggle -->
+                    <button id="themeToggle" onclick="toggleTheme()"
+                        class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 p-2.5 rounded-lg transition-all"
+                        title="Toggle theme">
+                        <svg id="sunIcon" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z">
+                            </path>
+                        </svg>
+                        <svg id="moonIcon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z">
+                            </path>
+                        </svg>
+                    </button>
+
+                    <button id="backBtn" onclick="showCompanyView()"
+                        class="hidden bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Back
+                    </button>
+                    <button onclick="openAddModal()"
+                        class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-sm hover:shadow flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
+                            </path>
+                        </svg>
+                        Add Lead
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Company View (Landing Page) -->
+    <div id="companyView" class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 fade-in">
+
+        <!-- Stats Summary -->
+        <div class="mb-10">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
+                <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                    </path>
+                </svg>
+                Overview
+            </h2>
+            <div id="statsOverview" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Stats cards will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Search Companies -->
+        <div class="mb-6">
+            <div class="relative">
+                <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <input type="text" id="companySearchInput" placeholder="Search companies by name..."
+                    class="w-full pl-12 pr-4 py-4 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent shadow-sm text-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
+                    onkeyup="filterCompanies()">
+            </div>
+        </div>
+
+        <!-- Companies Grid -->
+        <div>
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
+                <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
+                    </path>
+                </svg>
+                Companies
+            </h2>
+            <div id="companiesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Company cards will be loaded here -->
+            </div>
+            <div id="noCompanies" class="hidden text-center py-16">
+                <svg class="w-24 h-24 mx-auto text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4">
+                    </path>
+                </svg>
+                <p class="text-gray-500 dark:text-gray-400 text-lg">No companies found</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leads Detail View (Hidden by default) -->
+    <div id="leadsView" class="hidden max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+
+        <!-- Company Info Header -->
+        <div id="companyHeader"
+            class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl shadow-2xl p-8 mb-8 text-white">
+            <!-- Company details will be loaded here -->
+        </div>
+
+        <!-- Search and Actions -->
+        <div class="mb-6 flex flex-col sm:flex-row gap-4">
+            <div class="flex-1 relative">
+                <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <input type="text" id="leadSearchInput" placeholder="Search leads by name or email..."
+                    class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
+                    onkeyup="handleLeadSearch()">
+            </div>
+            <button onclick="exportCompanyLeads()"
+                class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-2 justify-center">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                    </path>
+                </svg>
+                Export CSV
+            </button>
+        </div>
+
+        <!-- Leads Grid -->
+        <div id="leadsGrid" class="space-y-4">
+            <!-- Lead cards will be loaded here -->
+        </div>
+
+        <div id="noLeads" class="hidden text-center py-16">
+            <svg class="w-24 h-24 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                </path>
+            </svg>
+            <p class="text-gray-500 text-lg">No leads found</p>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div id="leadModal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+        <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl slide-in">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 id="modalTitle" class="text-2xl font-bold text-gray-900 dark:text-gray-100">Add New Lead</h3>
+                    <button onclick="closeModal()"
+                        class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <form id="leadForm" onsubmit="handleSubmit(event)">
+                    <input type="hidden" id="leadId">
+
+                    <!-- Email field first for quick paste -->
+                    <div class="mb-5">
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            Email * (Paste email to autofill)
+                        </label>
+                        <input type="email" id="email" required pattern="[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+                            placeholder="john.doe@techcorp.com" oninput="handleEmailInput(event)"
+                            class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Paste email to auto-extract name and
+                            company</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Company
+                                Name *</label>
+                            <input type="text" id="companyName" required
+                                class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Contact
+                                Name *</label>
+                            <input type="text" id="contactName" required
+                                class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Title
+                                *</label>
+                            <input type="text" id="title" required
+                                class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">LinkedIn
+                                URL</label>
+                            <input type="url" id="linkedinUrl" placeholder="https://linkedin.com/in/..."
+                                class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                        </div>
+
+                        <div>
+                            <label
+                                class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Status</label>
+                            <select id="status"
+                                class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                                <option value="not_contacted">Not Contacted</option>
+                                <option value="contacted">Contacted</option>
+                                <option value="responded">Responded</option>
+                            </select>
+                        </div>
+
+                        <div></div> <!-- Spacer for grid -->
+                    </div>
+
+                    <div class="mt-5">
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Notes</label>
+                        <textarea id="notes" rows="3"
+                            class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                            placeholder="Add any additional information..."></textarea>
+                    </div>
+
+                    <div class="mt-5">
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Tags</label>
+                        <div class="flex gap-2 mb-2" id="tagsContainer">
+                            <!-- Tags will appear here -->
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="text" id="tagInput" placeholder="Add a tag (e.g., Hot Lead, Follow-up)"
+                                class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                onkeypress="if(event.key==='Enter'){event.preventDefault();addTag()}">
+                            <button type="button" onclick="addTag()"
+                                class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                                Add Tag
+                            </button>
+                        </div>
+                        <input type="hidden" id="tagsHidden">
+                    </div>
+
+                    <div id="warningMessage"
+                        class="hidden mt-5 p-4 bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-400 rounded-lg">
+                        <div class="flex">
+                            <svg class="w-5 h-5 text-yellow-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                    clip-rule="evenodd"></path>
+                            </svg>
+                            <p class="text-sm text-yellow-800 dark:text-yellow-300 font-medium"></p>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex justify-end gap-3">
+                        <button type="button" onclick="closeModal()"
+                            class="px-6 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                            class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-lg transition-colors shadow-sm hover:shadow font-medium">
+                            Save Lead
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline Modal -->
+    <div id="timelineModal" class="hidden fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+        <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-2xl slide-in">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Activity Timeline</h3>
+                    <button onclick="closeTimeline()" class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div id="timelineContent" class="space-y-4 max-h-96 overflow-y-auto">
+                    <!-- Timeline events will be rendered here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Copy Feedback Toast -->
+    <div id="copyToast"
+        class="hidden copy-feedback bg-green-600 dark:bg-green-700 text-white px-6 py-3 rounded-xl shadow-2xl slide-in flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+        Email copied to clipboard!
+    </div>
+
+    <script>
+        // Global state
+        let allLeads = [];
+        let allCompanies = {};
+        let currentCompany = null;
+        let filteredLeads = [];
+        let isEditing = false;
+        let currentTags = []; // Track current lead's tags
+
+        // API base URL
+        const API_BASE = '/api';
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeTheme();
+            loadAllData();
+            setupKeyboardShortcuts();
+        });
+
+        // Theme functions
+        function initializeTheme() {
+            const theme = localStorage.getItem('theme') || 'light';
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('light');
+            } else {
+                document.documentElement.classList.add('light');
+                document.documentElement.classList.remove('dark');
+            }
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.classList.contains('dark');
+
+            if (isDark) {
+                html.classList.remove('dark');
+                html.classList.add('light');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                html.classList.remove('light');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Tag management functions
+        function renderTags() {
+            const container = document.getElementById('tagsContainer');
+            container.innerHTML = currentTags.map(tag => `
+                <span class="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full text-sm">
+                    ${escapeHtml(tag)}
+                    <button type="button" onclick="removeTag('${escapeHtml(tag)}')" class="hover:text-blue-900 dark:hover:text-blue-200">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </span>
+            `).join('');
+            
+            // Update hidden field
+            document.getElementById('tagsHidden').value = JSON.stringify(currentTags);
+        }
+
+        function addTag() {
+            const input = document.getElementById('tagInput');
+            const tag = input.value.trim();
+            
+            if (tag && !currentTags.includes(tag)) {
+                currentTags.push(tag);
+                renderTags();
+                input.value = '';
+            }
+        }
+
+        function removeTag(tag) {
+            currentTags = currentTags.filter(t => t !== tag);
+            renderTags();
+        }
+
+        // Keyboard shortcuts
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                    e.preventDefault();
+                    openAddModal();
+                }
+                if (e.key === 'Escape') {
+                    closeModal();
+                }
+            });
+        }
+
+        // Load all data
+        async function loadAllData() {
+            try {
+                const [leadsResponse, statsResponse] = await Promise.all([
+                    fetch(`${API_BASE}/leads`),
+                    fetch(`${API_BASE}/stats`)
+                ]);
+
+                if (!leadsResponse.ok || !statsResponse.ok) {
+                    throw new Error('Failed to load data');
+                }
+
+                allLeads = await leadsResponse.json();
+                const stats = await statsResponse.json();
+
+                groupLeadsByCompany();
+                renderStats(stats);
+                renderCompanyCards();
+            } catch (error) {
+                console.error('Error loading data:', error);
+                alert('Failed to load data. Please refresh the page.');
+            }
+        }
+
+        // Group leads by company
+        function groupLeadsByCompany() {
+            allCompanies = {};
+
+            allLeads.forEach(lead => {
+                if (!allCompanies[lead.company_name]) {
+                    allCompanies[lead.company_name] = {
+                        name: lead.company_name,
+                        leads: [],
+                        stats: {
+                            total: 0,
+                            not_contacted: 0,
+                            contacted: 0,
+                            responded: 0
+                        }
+                    };
+                }
+
+                allCompanies[lead.company_name].leads.push(lead);
+                allCompanies[lead.company_name].stats.total++;
+                allCompanies[lead.company_name].stats[lead.status]++;
+            });
+        }
+
+        // Render statistics
+        function renderStats(stats) {
+            const statsContainer = document.getElementById('statsOverview');
+            statsContainer.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border-l-4 border-blue-500 dark:border-blue-400 hover:shadow-xl transition-shadow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total Leads</div>
+                            <div class="text-4xl font-bold text-gray-900 dark:text-gray-100 mt-2">${stats.total}</div>
+                        </div>
+                        <div class="bg-blue-100 dark:bg-blue-900/30 p-4 rounded-xl">
+                            <svg class="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border-l-4 border-gray-400 dark:border-gray-500 hover:shadow-xl transition-shadow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Not Contacted</div>
+                            <div class="text-4xl font-bold text-gray-700 dark:text-gray-300 mt-2">${stats.by_status.not_contacted}</div>
+                        </div>
+                        <div class="bg-gray-100 dark:bg-gray-700/30 p-4 rounded-xl">
+                            <svg class="w-8 h-8 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border-l-4 border-blue-500 dark:border-blue-400 hover:shadow-xl transition-shadow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Contacted</div>
+                            <div class="text-4xl font-bold text-blue-600 dark:text-blue-400 mt-2">${stats.by_status.contacted}</div>
+                        </div>
+                        <div class="bg-blue-100 dark:bg-blue-900/30 p-4 rounded-xl">
+                            <svg class="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border-l-4 border-green-500 dark:border-green-400 hover:shadow-xl transition-shadow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Responded</div>
+                            <div class="text-4xl font-bold text-green-600 dark:text-green-400 mt-2">${stats.by_status.responded}</div>
+                        </div>
+                        <div class="bg-green-100 dark:bg-green-900/30 p-4 rounded-xl">
+                            <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render company cards
+        function renderCompanyCards() {
+            const companiesGrid = document.getElementById('companiesGrid');
+            const companyList = Object.values(allCompanies).sort((a, b) =>
+                a.name.localeCompare(b.name)
+            );
+
+            if (companyList.length === 0) {
+                document.getElementById('noCompanies').classList.remove('hidden');
+                companiesGrid.innerHTML = '';
+                return;
+            }
+
+            document.getElementById('noCompanies').classList.add('hidden');
+
+            companiesGrid.innerHTML = companyList.map(company => `
+                <div class="company-card bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg p-6 border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 transition-all">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center gap-3 cursor-pointer flex-1" onclick="showCompanyDetails('${escapeHtml(company.name)}')">
+                            <div class="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-lg">
+                                <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">${escapeHtml(company.name)}</h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">${company.stats.total} ${company.stats.total === 1 ? 'lead' : 'leads'}</p>
+                            </div>
+                        </div>
+                        <button onclick="event.stopPropagation(); deleteCompany('${escapeHtml(company.name)}')"
+                                class="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                title="Delete company and all leads">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3 mt-4 cursor-pointer" onclick="showCompanyDetails('${escapeHtml(company.name)}')">
+                        <div class="bg-gray-100 dark:bg-gray-700 rounded-lg p-3 text-center">
+                            <div class="text-2xl font-bold text-gray-700 dark:text-gray-300">${company.stats.not_contacted}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Pending</div>
+                        </div>
+                        <div class="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3 text-center">
+                            <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">${company.stats.contacted}</div>
+                            <div class="text-xs text-blue-600 dark:text-blue-400 mt-1">Contacted</div>
+                        </div>
+                        <div class="bg-green-50 dark:bg-green-900/30 rounded-lg p-3 text-center">
+                            <div class="text-2xl font-bold text-green-600 dark:text-green-400">${company.stats.responded}</div>
+                            <div class="text-xs text-green-600 dark:text-green-400 mt-1">Responded</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center text-blue-600 dark:text-blue-400 font-medium text-sm cursor-pointer" onclick="showCompanyDetails('${escapeHtml(company.name)}')">
+                        <span>View details</span>
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Filter companies
+        function filterCompanies() {
+            const query = document.getElementById('companySearchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('.company-card');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const companyName = card.textContent.toLowerCase();
+                if (companyName.includes(query)) {
+                    card.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+
+            document.getElementById('noCompanies').classList.toggle('hidden', visibleCount > 0);
+        }
+
+        // Show company details
+        function showCompanyDetails(companyName) {
+            currentCompany = allCompanies[companyName];
+            filteredLeads = [...currentCompany.leads];
+
+            // Update UI
+            document.getElementById('companyView').classList.add('hidden');
+            document.getElementById('leadsView').classList.remove('hidden');
+            document.getElementById('backBtn').classList.remove('hidden');
+            document.getElementById('breadcrumb').textContent = companyName;
+
+            // Render company header
+            renderCompanyHeader();
+            renderLeads();
+        }
+
+        // Show company view
+        function showCompanyView() {
+            currentCompany = null;
+            document.getElementById('companyView').classList.remove('hidden');
+            document.getElementById('leadsView').classList.add('hidden');
+            document.getElementById('backBtn').classList.add('hidden');
+            document.getElementById('breadcrumb').textContent = '';
+            document.getElementById('leadSearchInput').value = '';
+        }
+
+        // Render company header
+        function renderCompanyHeader() {
+            const header = document.getElementById('companyHeader');
+            header.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-3xl font-bold mb-2">${escapeHtml(currentCompany.name)}</h2>
+                        <p class="text-blue-100 text-lg">${currentCompany.stats.total} ${currentCompany.stats.total === 1 ? 'lead' : 'leads'} total</p>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-4 text-center">
+                            <div class="text-3xl font-bold">${currentCompany.stats.not_contacted}</div>
+                            <div class="text-sm text-blue-100 mt-1">Not Contacted</div>
+                        </div>
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-4 text-center">
+                            <div class="text-3xl font-bold">${currentCompany.stats.contacted}</div>
+                            <div class="text-sm text-blue-100 mt-1">Contacted</div>
+                        </div>
+                        <div class="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-4 text-center">
+                            <div class="text-3xl font-bold">${currentCompany.stats.responded}</div>
+                            <div class="text-sm text-blue-100 mt-1">Responded</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render leads
+        function renderLeads() {
+            const leadsGrid = document.getElementById('leadsGrid');
+
+            if (filteredLeads.length === 0) {
+                document.getElementById('noLeads').classList.remove('hidden');
+                leadsGrid.innerHTML = '';
+                return;
+            }
+
+            document.getElementById('noLeads').classList.add('hidden');
+
+            leadsGrid.innerHTML = filteredLeads.map(lead => `
+                <div class="lead-card bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md p-6 border border-gray-200 dark:border-gray-700 border-l-4 ${getStatusBorderColor(lead.status)}">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg">
+                                    <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">${escapeHtml(lead.contact_name)}</h3>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">${escapeHtml(lead.title)}</p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                    </svg>
+                                    <button onclick="copyToClipboard('${lead.email}')" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline font-medium text-sm">
+                                        ${escapeHtml(lead.email)}
+                                    </button>
+                                </div>
+                                ${lead.linkedin_url ? `
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                                    </svg>
+                                    <a href="${escapeHtml(lead.linkedin_url)}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline text-sm">LinkedIn</a>
+                                </div>
+                                ` : ''}
+                            </div>
+
+                            <div class="flex items-center gap-3 mb-3">
+                                ${getStatusBadge(lead.status)}
+                                <span class="text-sm text-gray-500 dark:text-gray-400">Added ${formatDate(lead.date_added)}</span>
+                                ${lead.last_contacted ? `<span class="text-sm text-green-600 dark:text-green-400">Last contacted ${formatDate(lead.last_contacted)}</span>` : ''}
+                            </div>
+
+                            ${lead.tags && lead.tags.length > 0 ? `
+                            <div class="flex flex-wrap gap-2 mb-3">
+                                ${lead.tags.map(tag => `<span class="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded text-xs font-medium">${escapeHtml(tag)}</span>`).join('')}
+                            </div>
+                            ` : ''}
+
+                            ${lead.notes ? `
+                            <div class="mt-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+                                <p class="text-sm text-gray-700 dark:text-gray-300">${escapeHtml(lead.notes)}</p>
+                            </div>
+                            ` : ''}
+
+                            ${lead.activity_history && lead.activity_history.length > 0 ? `
+                            <button onclick='showTimeline(${JSON.stringify(lead).replace(/'/g, "&#39;")})' class="mt-3 text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                View Activity Timeline (${lead.activity_history.length} events)
+                            </button>
+                            ` : ''}
+                        </div>
+
+                        <div class="flex flex-col gap-2 ml-4">
+                            <button onclick='editLead(${JSON.stringify(lead).replace(/'/g, "&#39;")})'
+                                class="bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                                Edit
+                            </button>
+                            <button onclick="deleteLead('${lead.id}', '${escapeHtml(lead.contact_name)}')"
+                                class="bg-red-600 dark:bg-red-700 hover:bg-red-700 dark:hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Get status border color
+        function getStatusBorderColor(status) {
+            const colors = {
+                'not_contacted': 'border-gray-300 dark:border-gray-600',
+                'contacted': 'border-blue-500 dark:border-blue-400',
+                'responded': 'border-green-500 dark:border-green-400'
+            };
+            return colors[status] || colors['not_contacted'];
+        }
+
+        // Get status badge HTML
+        function getStatusBadge(status) {
+            const badges = {
+                'not_contacted': '<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300"><span class="w-2 h-2 bg-gray-400 rounded-full mr-2"></span>Not Contacted</span>',
+                'contacted': '<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"><span class="w-2 h-2 bg-blue-500 dark:bg-blue-400 rounded-full mr-2"></span>Contacted</span>',
+                'responded': '<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"><span class="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full mr-2"></span>Responded</span>'
+            };
+            return badges[status] || badges['not_contacted'];
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Handle lead search
+        function handleLeadSearch() {
+            const query = document.getElementById('leadSearchInput').value.toLowerCase();
+
+            if (!currentCompany) return;
+
+            if (query === '') {
+                filteredLeads = [...currentCompany.leads];
+            } else {
+                filteredLeads = currentCompany.leads.filter(lead =>
+                    lead.contact_name.toLowerCase().includes(query) ||
+                    lead.email.toLowerCase().includes(query) ||
+                    lead.title.toLowerCase().includes(query)
+                );
+            }
+
+            renderLeads();
+        }
+
+        // Copy to clipboard
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showCopyToast();
+            } catch (error) {
+                console.error('Failed to copy:', error);
+            }
+        }
+
+        // Show copy toast
+        function showCopyToast() {
+            const toast = document.getElementById('copyToast');
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 2500);
+        }
+
+        // Open add modal
+        // Handle email input for autofill
+        function handleEmailInput(event) {
+            const email = event.target.value.trim();
+
+            // Only autofill if editing mode is off and fields are empty
+            if (isEditing) return;
+
+            // Check if email matches pattern
+            const emailRegex = /^([a-zA-Z0-9._-]+)@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$/;
+            const match = email.match(emailRegex);
+
+            if (match) {
+                const namePart = match[1]; // john.doe
+                const domain = match[2]; // techcorp.com
+
+                // Extract company name from domain (remove .com, .io, etc.)
+                const companyName = domain.split('.')[0];
+
+                // Convert john.doe to John Doe
+                const contactName = namePart
+                    .split(/[._-]/)
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ');
+
+                // Only fill if fields are empty
+                const companyField = document.getElementById('companyName');
+                const contactField = document.getElementById('contactName');
+
+                if (!companyField.value) {
+                    companyField.value = companyName.charAt(0).toUpperCase() + companyName.slice(1);
+                }
+
+                if (!contactField.value) {
+                    contactField.value = contactName;
+                }
+            }
+        }
+
+        function openAddModal() {
+            isEditing = false;
+            currentTags = []; // Reset tags
+            document.getElementById('modalTitle').textContent = 'Add New Lead';
+            document.getElementById('leadForm').reset();
+            document.getElementById('leadId').value = '';
+
+            // Pre-fill company name if viewing company details
+            if (currentCompany) {
+                document.getElementById('companyName').value = currentCompany.name;
+            }
+
+            renderTags();
+            document.getElementById('warningMessage').classList.add('hidden');
+            document.getElementById('leadModal').classList.remove('hidden');
+        }
+
+        // Edit lead
+        function editLead(lead) {
+            isEditing = true;
+            currentTags = lead.tags || []; // Load existing tags
+            document.getElementById('modalTitle').textContent = 'Edit Lead';
+            document.getElementById('leadId').value = lead.id;
+            document.getElementById('companyName').value = lead.company_name;
+            document.getElementById('contactName').value = lead.contact_name;
+            document.getElementById('title').value = lead.title;
+            document.getElementById('email').value = lead.email;
+            document.getElementById('linkedinUrl').value = lead.linkedin_url || '';
+            document.getElementById('status').value = lead.status;
+            document.getElementById('notes').value = lead.notes || '';
+            renderTags();
+            document.getElementById('warningMessage').classList.add('hidden');
+            document.getElementById('leadModal').classList.remove('hidden');
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('leadModal').classList.add('hidden');
+            document.getElementById('leadForm').reset();
+            currentTags = [];
+            renderTags();
+        }
+
+        // Timeline functions
+        function showTimeline(lead) {
+            const modal = document.getElementById('timelineModal');
+            const content = document.getElementById('timelineContent');
+            
+            if (!lead.activity_history || lead.activity_history.length === 0) {
+                content.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-8">No activity history available</p>';
+            } else {
+                content.innerHTML = lead.activity_history.map((activity, index) => {
+                    const icons = {
+                        created: '<svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>',
+                        updated: '<svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg>',
+                        status_changed: '<svg class="w-5 h-5 text-purple-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"></path></svg>',
+                        note_added: '<svg class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg>',
+                        tag_added: '<svg class="w-5 h-5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path></svg>',
+                        tag_removed: '<svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path></svg>'
+                    };
+                    
+                    const icon = icons[activity.type] || icons.updated;
+                    const isLast = index === lead.activity_history.length - 1;
+                    
+                    return `
+                        <div class="flex gap-4">
+                            <div class="flex flex-col items-center">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700">
+                                    ${icon}
+                                </div>
+                                ${!isLast ? '<div class="w-0.5 h-full bg-gray-200 dark:bg-gray-700 mt-2"></div>' : ''}
+                            </div>
+                            <div class="flex-1 pb-8">
+                                <p class="font-semibold text-gray-900 dark:text-gray-100">${escapeHtml(activity.description)}</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">${formatDateTime(activity.timestamp)}</p>
+                                ${activity.details ? `<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${escapeHtml(activity.details)}</p>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        function closeTimeline() {
+            document.getElementById('timelineModal').classList.add('hidden');
+        }
+
+        // Handle form submit
+        async function handleSubmit(event) {
+            event.preventDefault();
+
+            const leadData = {
+                company_name: document.getElementById('companyName').value,
+                contact_name: document.getElementById('contactName').value,
+                title: document.getElementById('title').value,
+                email: document.getElementById('email').value,
+                linkedin_url: document.getElementById('linkedinUrl').value || '',
+                status: document.getElementById('status').value,
+                notes: document.getElementById('notes').value || '',
+                tags: currentTags
+            };
+
+            try {
+                const leadId = document.getElementById('leadId').value;
+                const url = isEditing ? `${API_BASE}/leads/${leadId}` : `${API_BASE}/leads`;
+                const method = isEditing ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(leadData)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to save lead');
+                }
+
+                const result = await response.json();
+
+                if (result.warning) {
+                    const warningDiv = document.getElementById('warningMessage');
+                    warningDiv.querySelector('p').textContent = result.warning;
+                    warningDiv.classList.remove('hidden');
+
+                    setTimeout(() => {
+                        closeModal();
+                        loadAllData().then(() => {
+                            if (currentCompany) {
+                                showCompanyDetails(currentCompany.name);
+                            }
+                        });
+                    }, 2000);
+                } else {
+                    closeModal();
+                    loadAllData().then(() => {
+                        if (currentCompany) {
+                            showCompanyDetails(currentCompany.name);
+                        }
+                    });
+                }
+
+            } catch (error) {
+                console.error('Error saving lead:', error);
+                alert(error.message || 'Failed to save lead. Please check your input and try again.');
+            }
+        }
+
+        // Delete lead
+        async function deleteLead(leadId, contactName) {
+            if (!confirm(`Are you sure you want to delete ${contactName}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/leads/${leadId}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) throw new Error('Failed to delete lead');
+
+                loadAllData().then(() => {
+                    if (currentCompany) {
+                        // Check if company still has leads
+                        if (allCompanies[currentCompany.name]) {
+                            showCompanyDetails(currentCompany.name);
+                        } else {
+                            showCompanyView();
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error deleting lead:', error);
+                alert('Failed to delete lead. Please try again.');
+            }
+        }
+
+        // Delete entire company (all leads)
+        async function deleteCompany(companyName) {
+            const company = allCompanies[companyName];
+            if (!company) return;
+
+            const leadCount = company.leads.length;
+            const confirmMsg = `Are you sure you want to delete ${companyName} and all ${leadCount} ${leadCount === 1 ? 'lead' : 'leads'}?\n\nThis action cannot be undone.`;
+
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+
+            try {
+                // Delete all leads for this company
+                const deletePromises = company.leads.map(lead =>
+                    fetch(`${API_BASE}/leads/${lead.id}`, { method: 'DELETE' })
+                );
+
+                const results = await Promise.allSettled(deletePromises);
+
+                // Check if any deletions failed
+                const failedCount = results.filter(r => r.status === 'rejected').length;
+
+                if (failedCount > 0) {
+                    alert(`Failed to delete ${failedCount} of ${leadCount} leads. Please try again.`);
+                    await loadAllData();
+                    return;
+                }
+
+                // All deletions successful
+                await loadAllData();
+                showCompanyView();
+
+                // Show success message
+                const toast = document.createElement('div');
+                toast.className = 'fixed bottom-8 right-8 bg-green-600 dark:bg-green-700 text-white px-6 py-3 rounded-xl shadow-2xl slide-in flex items-center gap-2 z-50';
+                toast.innerHTML = `
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    ${companyName} and ${leadCount} ${leadCount === 1 ? 'lead' : 'leads'} deleted successfully!
+                `;
+                document.body.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+
+            } catch (error) {
+                console.error('Error deleting company:', error);
+                alert('Failed to delete company. Please try again.');
+                await loadAllData();
+            }
+        }
+
+        // Export company leads to CSV
+        async function exportCompanyLeads() {
+            if (!currentCompany) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/export`);
+                if (!response.ok) throw new Error('Failed to export');
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${currentCompany.name.replace(/\s+/g, '_')}_leads_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            } catch (error) {
+                console.error('Error exporting:', error);
+                alert('Failed to export leads. Please try again.');
+            }
+        }
+
+        // Export all leads to CSV
+        async function exportToCSV() {
+            try {
+                const response = await fetch(`${API_BASE}/export`);
+                if (!response.ok) throw new Error('Failed to export');
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `all_leads_export_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            } catch (error) {
+                console.error('Error exporting:', error);
+                alert('Failed to export leads. Please try again.');
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,64 @@
+{
+  "leads": [
+    {
+      "company_name": "Interswitch",
+      "contact_name": "Edikan Etuduko",
+      "title": "Talent Acquisition Specialist",
+      "email": "edikan.etukudo@interswitchgroup.com",
+      "linkedin_url": "",
+      "status": "contacted",
+      "notes": "Met at tech conference. Very interested in our product.",
+      "tags": ["Hot Lead", "Conference"],
+      "id": "c2501d2e-798f-4d00-b9ee-1e3f17685bdc",
+      "date_added": "2025-11-10T09:24:30.590825",
+      "last_contacted": "2025-11-10T14:30:00.000000",
+      "activity_history": [
+        {
+          "timestamp": "2025-11-10T09:24:30.590825",
+          "type": "created",
+          "description": "Lead created for Edikan Etuduko",
+          "details": null
+        },
+        {
+          "timestamp": "2025-11-10T14:30:00.000000",
+          "type": "status_changed",
+          "description": "Status changed from not_contacted to contacted",
+          "details": null
+        },
+        {
+          "timestamp": "2025-11-10T14:30:00.000000",
+          "type": "tag_added",
+          "description": "Tag added: Hot Lead",
+          "details": null
+        }
+      ]
+    },
+    {
+      "company_name": "Interswitch",
+      "contact_name": "Ubon Abasi Moses",
+      "title": "Head of Engineering",
+      "email": "ubon-abasi.moses@interswitchgroup.com",
+      "linkedin_url": "",
+      "status": "contacted",
+      "notes": "Follow up next week about integration possibilities.",
+      "tags": ["Follow-up", "Technical"],
+      "id": "3344f1d9-f2ac-4d88-a864-a40e69bb4fe6",
+      "date_added": "2025-11-10T10:06:02.896412",
+      "last_contacted": "2025-11-10T15:45:00.000000",
+      "activity_history": [
+        {
+          "timestamp": "2025-11-10T10:06:02.896412",
+          "type": "created",
+          "description": "Lead created for Ubon Abasi Moses",
+          "details": null
+        },
+        {
+          "timestamp": "2025-11-10T15:45:00.000000",
+          "type": "status_changed",
+          "description": "Status changed from not_contacted to contacted",
+          "details": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+name: Deploy
+
+# This workflow is designed to be called from another top-level workflows.
+on:
+  workflow_call:
+    inputs:
+      AWS_REGION:
+        type: string
+        required: true
+      DEPLOYMENT_NAMESPACE:
+        type: string
+        required: true
+      DEPLOYMENT_CUSTOMER:
+        type: string
+        required: true
+      DEPLOYMENT_CUSTOMER_DISPLAY_NAME:
+        type: string
+        required: true
+      DEPLOYMENT_ENVIRONMENT:
+        type: string
+        required: true
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+
+env:
+  AWS_REGION: ${{ inputs.AWS_REGION }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  REACT_APP_ORG_NAME: ${{ inputs.DEPLOYMENT_CUSTOMER_DISPLAY_NAME }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+          java-package: "jdk"
+      - name: Verify Java installation
+        run: java --version
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Setup Poetry
+        uses: Gr1N/setup-poetry@v8
+        with:
+          poetry-version: "2.1.3"
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.11.1"
+      - name: Setup PNpm and node-tools
+        run: |
+          npm install --global pnpm yarn ts-node aws-cdk cdk;
+
+      # Do not use "official" smithy github action, because it breaks something around java
+      - name: Setup Smithy
+        run: |
+          set -eu;
+          export SMITHY_VERSION_FULL=1.50.0
+          export SMITHY_TMP=$(mktemp --directory);
+          export SMITHY_HOME=/opt/smithy;
+          cd "${SMITHY_TMP}";
+          curl -L "https://github.com/smithy-lang/smithy/releases/download/${SMITHY_VERSION_FULL}/smithy-cli-linux-x86_64.zip" -o smithy-cli-linux-x86_64.zip;
+          unzip -qo smithy-cli-linux-x86_64.zip;
+          "${SMITHY_TMP}"/smithy-cli-linux-x86_64/install --install-dir "${SMITHY_HOME}";
+          cd /;
+          rm -rf "${SMITHY_TMP}";
+
+      - name: Calculate web package version
+        id: version
+        run: |
+          # Get the number of commits that affected packages/web/packages/ directory
+          WEB_COMMITS=$(git rev-list --count HEAD -- packages/web/packages/ 2>/dev/null || echo "0")
+
+          # Create version string
+          GMC_VERSION="1.2.${WEB_COMMITS}"
+
+          # Set as environment variable for the build process
+          echo "GMC_VERSION=$GMC_VERSION" >> $GITHUB_ENV
+
+      - name: Verify configuration
+        run: |
+          echo "# INSTALLATION REPORT:";
+          echo "";
+          echo "$ java --version:";
+          java -version;
+          echo "$ mvn --version:";
+          mvn --version;
+          echo "$ python --version:";
+          python --version;
+          echo "$ poetry --version:";
+          poetry --version;
+          echo "$ node --version:";
+          node --version;
+          echo "$ npm --version:";
+          npm --version;
+          echo "$ pnpm --version:";
+          pnpm --version;
+          echo "$ yarn --version:";
+          yarn --version;
+          echo "$ smithy --version:";
+          smithy --version;
+          echo "$ aws --version:";
+          aws --version;
+          aws sts get-caller-identity;
+          echo "GMC_VERSION: $GMC_VERSION";
+
+      - name: Deploy
+        run: |
+          ./gradlew :web:install;
+          ./gradlew generate;
+          ./gradlew :infra-tenant:deploy :web-infra:deploy -Pnamespace="${{ inputs.DEPLOYMENT_NAMESPACE }}" -Pcustomer="${{ inputs.DEPLOYMENT_CUSTOMER }}" -Penvironment="${{ inputs.DEPLOYMENT_ENVIRONMENT}}" -DskipTests=true;

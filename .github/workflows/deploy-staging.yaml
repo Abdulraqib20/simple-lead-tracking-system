@@ -1,0 +1,21 @@
+name: Deploy staging environment
+
+# Run this workflow only when PR is created and labeled with 'staging' label
+on:
+  pull_request:
+    types:
+    - labeled
+
+jobs:
+  deploy:
+    if: ${{ github.event.label.name == 'staging' }}
+    uses: ./.github/workflows/deploy.yaml
+    with:
+      AWS_REGION: eu-central-1
+      DEPLOYMENT_NAMESPACE: glucose
+      DEPLOYMENT_CUSTOMER: generic
+      DEPLOYMENT_CUSTOMER_DISPLAY_NAME: Demo (staging)
+      DEPLOYMENT_ENVIRONMENT: staging
+    secrets:
+      AWS_ACCESS_KEY_ID: '${{ secrets.V1_STAGING_AWS_ACCESS_KEY_ID }}'
+      AWS_SECRET_ACCESS_KEY: '${{ secrets.V1_STAGING_AWS_SECRET_ACCESS_KEY }}'
