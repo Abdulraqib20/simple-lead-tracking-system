@@ -65,7 +65,7 @@ async def read_root():
             return FileResponse(str(index_path), media_type="text/html")
     except Exception:
         pass
-    
+
     return {"message": "Lead Tracking System API", "status": "running"}
 
 
