@@ -56,6 +56,18 @@ async def read_root():
     return {"message": "Lead Tracking System API"}
 
 
+@app.get("/favicon.ico")
+@app.get("/favicon.png")
+async def favicon():
+    """
+    Return 204 No Content for favicon requests to avoid errors.
+
+    Returns:
+        Response: 204 No Content response
+    """
+    return Response(status_code=204)
+
+
 @app.get("/api/leads", response_model=List[Lead])
 async def get_leads(search: Optional[str] = Query(None, description="Search by company, name, or email")):
     """
